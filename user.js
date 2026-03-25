@@ -26,15 +26,10 @@ function loadConfig(cb){
   });
 }
 
-// Also watch for live changes (so "Turn On" in dev portal reflects immediately)
 function watchConfig(){
   db.ref(DB.appConfig).on('value', function(snap){
     _cfg = snap.val() || {};
     applyBranding();
-    // If system is now ON and user is logged in — reload to get full app
-    if(_cfg.systemEnabled && _user){
-      window.location.reload();
-    }
   });
 }
 
@@ -86,17 +81,28 @@ auth.onAuthStateChanged(function(user){
     var lb=$('login-btn'); if(lb){lb.textContent='Log In';lb.disabled=false;}
     return;
   }
-  // User is logged in — check if system is enabled
-  db.ref(DB.appConfig+'/systemEnabled').once('value', function(snap){
-    if(snap.val() === true){
-      // System ON — reload to load full app (placeholder for future full user.js)
-      // For now still show coming soon but with a different message
-      showComingSoon(user);
+  // User is logged in — check betaAccess
+  db.ref(DB.admins+'/'+user.uid+'/betaAccess').once('value', function(snap){
+    if(snap.val()===true){
+      showFullApp(user);
     } else {
       showComingSoon(user);
     }
   });
 });
+
+function showFullApp(user){
+  // Full app is loaded — for now reload so future full user.js takes over
+  // This flag is checked at boot; betaAccess users bypass coming soon
+  showScreen('coming-soon');
+  db.ref(DB.users+'/'+user.uid+'/firstname').once('value', function(snap){
+    var name = snap.val() || user.email;
+    var el = $('cs-username');
+    if(el) el.textContent = 'Welcome, ' + name + ' — Full app coming soon!';
+    var title = $('cs-title'); if(title) title.textContent = 'You\'re In Early Access';
+    var sub = $('cs-sub'); if(sub) sub.textContent = 'You have been granted early access. The full app is launching soon.';
+  });
+}
 
 function showComingSoon(user){
   showScreen('coming-soon');
@@ -134,7 +140,14 @@ document.addEventListener('DOMContentLoaded', function(){
         var lb=$('login-btn'); if(lb){lb.textContent='Log In';lb.disabled=false;}
         return;
       }
-      showComingSoon(user);
+      // Check if this user has been granted beta access by admin
+      db.ref(DB.admins+'/'+user.uid+'/betaAccess').once('value', function(snap){
+        if(snap.val()===true){
+          showFullApp(user);
+        } else {
+          showComingSoon(user);
+        }
+      });
     });
     watchConfig();
   });
