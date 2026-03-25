@@ -1,0 +1,26 @@
+{
+  "name": "Atlantas",
+  "short_name": "Atlantas",
+  "description": "Atlantas — your financial platform",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f8f5ff",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "https://i.imgur.com/iN8T10D.jpeg",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://i.imgur.com/iN8T10D.jpeg",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance"],
+  "lang": "en"
+}

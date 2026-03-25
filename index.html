@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="theme-color" content="#0d0f14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Atlantas</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="https://i.imgur.com/iN8T10D.jpeg">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="config.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{--p:#1a56ff;--bg:#f0f2f5;--text:#0d0f14;--text2:#6b7280;--border:#e5e7eb;--error:#e53935;--font:'Sora',-apple-system,sans-serif;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* AUTH */
+#auth-screen{display:none;min-height:100vh;align-items:center;justify-content:center;padding:40px 20px;flex-direction:column;}
+#auth-screen.visible{display:flex;}
+.auth-logo{text-align:center;margin-bottom:28px;animation:fadeUp 0.5s both;}
+.auth-logo img{width:72px;height:72px;border-radius:18px;display:block;margin:0 auto 12px;object-fit:cover;box-shadow:0 4px 20px rgba(26,86,255,0.2);}
+.auth-logo-name{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.4px;}
+.auth-logo-sub{font-size:13px;color:var(--text2);margin-top:3px;}
+.auth-card{background:#fff;border-radius:20px;padding:28px 22px;width:100%;max-width:380px;box-shadow:0 1px 4px rgba(0,0,0,0.07),0 4px 16px rgba(0,0,0,0.05);border:1px solid var(--border);animation:fadeUp 0.5s 0.08s both;}
+.auth-card h2{font-size:18px;font-weight:800;color:var(--text);margin-bottom:18px;text-align:center;}
+.ai{display:block;width:100%;background:#f7f8fa;border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;font-size:15px;color:var(--text);margin-bottom:10px;outline:none;transition:border-color 0.2s;font-family:var(--font);}
+.ai:focus{border-color:var(--p);background:#fff;}
+.ai::placeholder{color:#9ca3af;}
+.auth-btn{display:block;width:100%;background:var(--text);color:#fff;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;transition:opacity 0.2s;font-family:var(--font);}
+.auth-btn:active{opacity:0.88;}
+.tlink{display:block;text-align:center;margin-top:11px;color:var(--p);background:none;border:none;font-size:14px;cursor:pointer;text-decoration:underline;padding:6px;font-family:var(--font);}
+.aerr{color:var(--error);font-size:13px;text-align:center;margin:5px 0;min-height:17px;}
+
+/* SIGNUP */
+.ref-box{display:flex;align-items:center;gap:10px;background:#eef6ff;border:1.5px solid var(--p);border-radius:10px;padding:10px 13px;margin-bottom:10px;}
+.ref-code{font-size:14px;font-weight:700;color:var(--p);font-family:'JetBrains Mono',monospace;letter-spacing:2px;flex:1;}
+.ref-badge{background:var(--p);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;}
+
+/* COMING SOON */
+#coming-soon{display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;padding:40px 20px;text-align:center;background:var(--bg);}
+#coming-soon.visible{display:flex;}
+.cs-icon{font-size:64px;margin-bottom:20px;animation:float 3s ease-in-out infinite;}
+.cs-title{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-0.5px;margin-bottom:8px;}
+.cs-sub{font-size:15px;color:var(--text2);line-height:1.6;max-width:300px;margin-bottom:32px;}
+.cs-name{font-size:13px;color:var(--p);font-weight:600;margin-bottom:24px;}
+.cs-logout{background:none;border:1.5px solid var(--border);border-radius:10px;padding:10px 24px;font-size:14px;font-weight:600;color:var(--text2);cursor:pointer;font-family:var(--font);transition:all 0.2s;}
+.cs-logout:hover{border-color:var(--error);color:var(--error);}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-logo">
+    <img src="https://i.imgur.com/iN8T10D.jpeg" alt="" id="auth-logo-img">
+    <div class="auth-logo-name" id="auth-app-name">Atlantas</div>
+    <div class="auth-logo-sub" id="auth-app-sub">Secure · Reliable · Global</div>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="auth-card" id="login-section">
+    <h2>Welcome Back</h2>
+    <input type="email"    class="ai" id="li-email"    placeholder="Email address" autocomplete="email">
+    <input type="password" class="ai" id="li-password" placeholder="Password" autocomplete="current-password">
+    <div class="aerr" id="login-error"></div>
+    <button class="auth-btn" id="login-btn">Log In</button>
+    <button class="tlink" id="to-signup">New here? Sign Up</button>
+  </div>
+
+  <!-- SIGNUP -->
+  <div class="auth-card" id="signup-section" style="display:none;">
+    <h2>Create Account</h2>
+    <input type="text"  class="ai" id="su-surname"   placeholder="Surname">
+    <input type="text"  class="ai" id="su-firstname" placeholder="First Name">
+    <input type="text"  class="ai" id="su-othername" placeholder="Other Name (optional)">
+    <input type="tel"   class="ai" id="su-phone"     placeholder="Phone Number">
+    <input type="text"  class="ai" id="su-username"  placeholder="Username">
+    <input type="email" class="ai" id="su-email"     placeholder="Email Address" autocomplete="email">
+    <input type="password" class="ai" id="su-password" placeholder="Password (min 8 chars)" autocomplete="new-password">
+    <input type="password" class="ai" id="su-confirm"  placeholder="Confirm Password">
+    <select class="ai" id="su-currency">
+      <option value="USD">🇺🇸 USD – US Dollar</option>
+      <option value="EUR">🇪🇺 EUR – Euro</option>
+      <option value="GBP">🇬🇧 GBP – British Pound</option>
+      <option value="NGN">🇳🇬 NGN – Nigerian Naira</option>
+      <option value="CAD">🇨🇦 CAD – Canadian Dollar</option>
+      <option value="AUD">🇦🇺 AUD – Australian Dollar</option>
+    </select>
+    <select class="ai" id="su-country">
+      <option value="">Select Country</option>
+      <option value="USA">🇺🇸 United States</option>
+      <option value="UK">🇬🇧 United Kingdom</option>
+      <option value="Nigeria">🇳🇬 Nigeria</option>
+      <option value="Germany">🇩🇪 Germany</option>
+      <option value="France">🇫🇷 France</option>
+      <option value="Canada">🇨🇦 Canada</option>
+      <option value="Brazil">🇧🇷 Brazil</option>
+      <option value="Australia">🇦🇺 Australia</option>
+      <option value="Portugal">🇵🇹 Portugal</option>
+      <option value="Spain">🇪🇸 Spain</option>
+      <option value="Ghana">🇬🇭 Ghana</option>
+      <option value="Kenya">🇰🇪 Kenya</option>
+      <option value="Other">🌍 Other</option>
+    </select>
+    <input type="text" class="ai" id="su-promo"    placeholder="Promo Code (optional)">
+    <div id="su-ref-applied" style="display:none;">
+      <div class="ref-box">
+        <span>🔗</span>
+        <span class="ref-code" id="su-ref-display"></span>
+        <span class="ref-badge">Applied ✓</span>
+      </div>
+    </div>
+    <div id="su-ref-manual">
+      <input type="text" class="ai" id="su-referral" placeholder="Referral Code (optional)">
+    </div>
+    <div class="aerr" id="signup-error"></div>
+    <button class="auth-btn" id="signup-btn">Create Account</button>
+    <button class="tlink" id="to-login">Already registered? Log In</button>
+  </div>
+</div>
+
+<!-- COMING SOON -->
+<div id="coming-soon">
+  <div class="cs-icon">🚀</div>
+  <div class="cs-title" id="cs-title">Coming Soon</div>
+  <div class="cs-sub" id="cs-sub">We're putting the finishing touches on something amazing. Check back soon!</div>
+  <div class="cs-name" id="cs-username"></div>
+  <button class="cs-logout" id="cs-logout-btn">Sign Out</button>
+</div>
+
+<script src="user.js"></script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('/sw.js').catch(function(){});
+  });
+}
+</script>
+</body>
+</html>
